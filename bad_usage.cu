@@ -80,8 +80,13 @@ int main()
     cudaMalloc(&d_rt, sizeof(Runtime));
     cudaMemcpy(d_rt, &h_rt, sizeof(Runtime), cudaMemcpyHostToDevice);
 
-    // C) Launch the kernel
-    //kernel_call_dev_app<<<1,1>>>(d_sym_ptr, d_rt, 17, 0, 1);
+    // C) Increase the device thread stack size to support deeper recursion
+    size_t current_limit = 0;
+    cudaDeviceGetLimit(&current_limit, cudaLimitStackSize);
+    size_t new_limit = current_limit * 8; // grow stack to handle deeper recursion
+    cudaDeviceSetLimit(cudaLimitStackSize, new_limit);
+
+    // D) Launch the kernel
     kernel_call_dev_app<<<1,1>>>(d_sym_ptr, d_rt, 18, 0, 1);
     CHECK((CUresult)cudaDeviceSynchronize(), "after kernel_call_dev_app launch");
 
